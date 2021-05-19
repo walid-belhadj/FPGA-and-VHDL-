@@ -1,0 +1,369 @@
+-------------------------------------------------
+-- 2:4 Decoder (ESD figure 2.5)
+-- by Weijun Zhang, 04/2001
+--
+-- decoder is a kind of inverse process
+-- of multiplexor
+-------------------------------------------------
+
+library ieee;
+use ieee.std_logic_1164.all;
+
+-------------------------------------------------
+
+entity DECODER is
+port(	I:	in std_logic_vector(1 downto 0);
+	O:	out std_logic_vector(3 downto 0)
+);
+end DECODER;
+
+-------------------------------------------------
+
+architecture behv of DECODER is
+begin
+
+    -- process statement
+
+    process (I)
+    begin
+    
+        -- use case statement 
+
+        case I is
+	    when "00" => O <= "0001";
+	    when "01" => O <= "0010";
+	    when "10" => O <= "0100";
+	    when "11" => O <= "1000";
+	    when others => O <= "XXXX";
+	end case;
+
+    end process;
+	
+end behv;
+
+architecture when_else of DECODER is
+begin
+	
+    -- use when..else statement
+
+    O <= 	"0001" when I = "00" else
+		"0010" when I = "01" else
+		"0100" when I = "10" else
+		"1000" when I = "11" else
+		"XXXX";
+
+end when_else;
+
+--------------------------------------------------
+---------------------------------------------------
+-- n-bit Comparator (ESD book figure 2.5)
+-- by Weijun Zhang, 04/2001 
+--
+-- this simple comparator has two n-bit inputs & 
+-- three 1-bit outputs
+---------------------------------------------------
+ 
+library ieee;
+use ieee.std_logic_1164.all;
+
+---------------------------------------------------
+
+entity Comparator is
+
+generic(n: natural :=2);
+port(	A:	in std_logic_vector(n-1 downto 0);
+	B:	in std_logic_vector(n-1 downto 0);
+	less:		out std_logic;
+	equal:		out std_logic;
+	greater:	out std_logic
+);
+end Comparator;
+
+---------------------------------------------------
+
+architecture behv of Comparator is
+
+begin 
+    
+    process(A,B)
+    begin
+        if (A<B) then 
+	    less <= '1';
+	    equal <= '0';
+	    greater <= '0';
+	elsif (A=B) then   
+	    less <= '0';
+	    equal <= '1';
+	    greater <= '0';
+	else 
+	    less <= '0';
+	    equal <= '0';
+	    greater <= '1';
+	end if;
+    end process;
+
+end behv;
+
+---------------------------------------------------
+--------------------------------------------------------
+-- VHDL code for n-bit adder (ESD figure 2.5)	
+-- by Weujun Zhang, 04/2001
+--
+-- function of adder:
+-- A plus B to get n-bit sum and 1 bit carry	
+-- we may use generic statement to set the parameter 
+-- n of the adder.							
+--------------------------------------------------------
+
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_arith.all;
+use ieee.std_logic_unsigned.all;
+
+--------------------------------------------------------
+
+entity ADDER is
+
+generic(n: natural :=2);
+port(	A:	in std_logic_vector(n-1 downto 0);
+	B:	in std_logic_vector(n-1 downto 0);
+	carry:	out std_logic;
+	sum:	out std_logic_vector(n-1 downto 0)
+);
+
+end ADDER;
+
+--------------------------------------------------------
+
+architecture behv of ADDER is
+
+-- define a temparary signal to store the result
+
+signal result: std_logic_vector(n downto 0);
+ 
+begin					  
+ 
+    -- the 3rd bit should be carry
+   
+    result <= ('0' & A)+('0' & B);
+    sum <= result(n-1 downto 0);
+    carry <= result(n);
+
+end behv;
+
+--------------------------------------------------------
+-------------------------------------------------
+-- VHDL code for 4:1 multiplexor
+-- (ESD book figure 2.5)
+-- by Weijun Zhang, 04/2001
+--
+-- Multiplexor is a device to select different
+-- inputs to outputs. we use 3 bits vector to 
+-- describe its I/O ports 
+-------------------------------------------------
+
+library ieee;
+use ieee.std_logic_1164.all;
+
+-------------------------------------------------
+
+entity Mux is
+port(	I3: 	in std_logic_vector(2 downto 0);
+	I2: 	in std_logic_vector(2 downto 0);
+	I1: 	in std_logic_vector(2 downto 0);
+	I0: 	in std_logic_vector(2 downto 0);
+	S:	in std_logic_vector(1 downto 0);
+	O:	out std_logic_vector(2 downto 0)
+);
+end Mux;  
+
+-------------------------------------------------
+
+architecture behv1 of Mux is
+begin
+    process(I3,I2,I1,I0,S)
+    begin
+    
+        -- use case statement
+        case S is
+	    when "00" =>	O <= I0;
+	    when "01" =>	O <= I1;
+	    when "10" =>	O <= I2;
+	    when "11" =>	O <= I3;
+	    when others =>	O <= "ZZZ";
+	end case;
+
+    end process;
+end behv1;
+
+architecture behv2 of Mux is
+begin
+
+    -- use when.. else statement
+    O <=	I0 when S="00" else
+		I1 when S="01" else
+		I2 when S="10" else
+		I3 when S="11" else
+		"ZZZ";
+
+end behv2;
+--------------------------------------------------
+--------------------------------------------------------
+-- Example of doing multiplication showing
+-- (1) how to use variable with in process
+-- (2) how to use for loop statement
+-- (3) algorithm of multiplication
+--
+-- by Weijun Zhang, 05/2001
+--------------------------------------------------------
+
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_arith.all;
+use ieee.std_logic_unsigned.all;
+
+-- two 4-bit inputs and one 8-bit outputs
+entity multiplier is
+port(	num1, num2:	in std_logic_vector(1 downto 0);
+	product: 	out std_logic_vector(3 downto 0)
+);
+end multiplier;
+
+architecture behv of multiplier is
+
+begin
+process(num1, num2)
+	
+  variable num1_reg: std_logic_vector(2 downto 0);
+  variable product_reg: std_logic_vector(5 downto 0);
+	
+begin	 
+	
+  num1_reg := '0' & num1;
+  product_reg := "0000" & num2;
+
+  -- use variables doing computation
+  -- algorithm is to repeat shifting/adding
+  for i in 1 to 3 loop
+    if product_reg(0)='1' then
+	  product_reg(5 downto 3) := product_reg(5 downto 3) 
+	  + num1_reg(2 downto 0);
+	end if;
+	product_reg(5 downto 0) := '0' & product_reg(5 downto 1);
+  end loop;
+  
+  -- assign the result of computation back to output signal
+  product <= product_reg(3 downto 0);
+
+end process;
+
+end behv;
+----------------------------------------------------------
+---------------------------------------------------
+-- Simple ALU Module (ESD book Figure 2.5)		
+-- by Weijun Zhang, 04/2001
+--
+-- ALU stands for arithmatic logic unit.
+-- It perform multiple operations according to 
+-- the control bits.
+-- we use 2's complement subraction in this example
+-- two 2-bit inputs & carry-bit ignored
+---------------------------------------------------
+
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
+use ieee.std_logic_arith.all;
+
+---------------------------------------------------
+
+entity ALU is
+
+port(	A:	in std_logic_vector(1 downto 0);
+	B:	in std_logic_vector(1 downto 0);
+	Sel:	in std_logic_vector(1 downto 0);
+	Res:	out std_logic_vector(1 downto 0)  
+);
+
+end ALU;
+
+---------------------------------------------------
+
+architecture behv of ALU is
+begin					   
+
+    process(A,B,Sel)
+    begin
+    
+	-- use case statement to achieve 
+	-- different operations of ALU
+
+	case Sel is
+	    when "00" =>
+		Res <= A + B;
+	    when "01" =>						
+	        Res <= A + (not B) + 1;
+            when "10" =>
+		Res <= A and B;
+	    when "11" =>	 
+		Res <= A or B;
+	    when others =>	 
+		Res <= "XX";
+        end case;
+
+    end process;
+
+end behv;
+
+----------------------------------------------------
+----------------------------------------------------
+-- VHDL code for n-bit counter (ESD figure 2.6)
+-- by Weijun Zhang, 04/2001
+--
+-- this is the behavior description of n-bit counter
+-- another way can be used is FSM model. 
+----------------------------------------------------
+	
+library ieee ;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
+
+----------------------------------------------------
+
+entity counter is
+
+generic(n: natural :=2);
+port(	clock:	in std_logic;
+	clear:	in std_logic;
+	count:	in std_logic;
+	Q:	out std_logic_vector(n-1 downto 0)
+);
+end counter;
+
+----------------------------------------------------
+
+architecture behv of counter is		 	  
+	
+    signal Pre_Q: std_logic_vector(n-1 downto 0);
+
+begin
+
+    -- behavior describe the counter
+
+    process(clock, count, clear)
+    begin
+	if clear = '1' then
+ 	    Pre_Q <= Pre_Q - Pre_Q;
+	elsif (clock='1' and clock'event) then
+	    if count = '1' then
+		Pre_Q <= Pre_Q + 1;
+	    end if;
+	end if;
+    end process;	
+	
+    -- concurrent assignment statement
+    Q <= Pre_Q;
+
+end behv;
+
+-----------------------------------------------------
